@@ -1,23 +1,26 @@
 #include "Character.hpp"
+#include "AMateria.hpp"
 
 Character::Character(): name(""), floorHead(NULL), size_floor(0)
 {
-    for (int i = 0; i < 4; ++i) inventory[i] = 0;
+    for (int i = 0; i < 4; ++i)
+        inventory[i] = 0;
     std::cout << "Default constructor of 'Character' called" << std::endl;
 }
 
 Character::Character(std::string const & name): name(name), floorHead(NULL), size_floor(0)
 {
-    for (int i = 0; i < 4; ++i) inventory[i] = 0;
+    for (int i = 0; i < 4; i++)
+        inventory[i] = 0;
     std::cout << "Constructor with name of 'Character' called" << std::endl;
 }
-
 
 Character::Character(const Character &other) : name(other.name), floorHead(NULL), size_floor(0)
 {
     for (int i = 0; i < 4; ++i)
         inventory[i] = 0;
     copyInventoryFrom(other);
+    copyFloorFrom(other);
     std::cout << "Copy constructor of 'Character' called" << std::endl;
 }
 
@@ -32,8 +35,7 @@ Character& Character::operator=(const Character& other)
         for (int i = 0; i < 4; ++i)
             inventory[i] = 0;
         copyInventoryFrom(other);
-        floorHead = NULL;
-        size_floor = 0;
+        copyFloorFrom(other);
     }
     return *this;
 }
@@ -141,4 +143,26 @@ void Character::free_floorHead()
     }
 
     size_floor = 0;
+}
+
+void Character::copyFloorFrom(const Character& other)
+{
+    std::cout << "copyFloorFrom() called" << std::endl;
+    if (!other.floorHead)
+        return;
+    t_FloorNode* current = other.floorHead;
+    t_FloorNode* prev = NULL;
+    while (current)
+    {
+        t_FloorNode* node = new t_FloorNode;
+        node->materia = current->materia->clone();
+        node->next = NULL;
+        if (!floorHead)
+            floorHead = node;
+        else
+            prev->next = node;
+        prev = node;
+        current = current->next;
+        size_floor++;
+    }
 }

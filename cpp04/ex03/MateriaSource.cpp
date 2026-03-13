@@ -1,14 +1,15 @@
 #include "MateriaSource.hpp"
-#include "AMateria.hpp"
 
 MateriaSource::MateriaSource()
 {
-    for (int i = 0; i < 4; ++i) templates[i] = 0;
+    for (int i = 0; i < 4; ++i)
+        templates[i] = 0;
 }
 
 MateriaSource::MateriaSource(const MateriaSource& other)
 {
-    for (int i = 0; i < 4; ++i) templates[i] = 0;
+    for (int i = 0; i < 4; ++i)
+        templates[i] = 0;
     copyTemplatesFrom(other);
 }
 
