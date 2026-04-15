@@ -1,0 +1,661 @@
+AMateria.cpp
+#include "AMateria.hpp"
+
+AMateria::AMateria() : type("")
+{
+    std::cout << "Default constructor of 'AMateria' called" << std::endl;
+}
+
+AMateria::AMateria(std::string const & str) : type(str)
+{
+    std::cout << "Constructor with type parameter of 'AMateria' called" << std::endl;
+}
+
+AMateria::AMateria(const AMateria &other) : type(other.type)
+{
+    std::cout << "Copy constructor of 'AMateria' called" << std::endl;
+}
+
+AMateria& AMateria::operator=(const AMateria &other)
+{
+    std::cout << "Copy assignment operator of 'AMateria' called" << std::endl;
+    (void)other;
+    return (*this);
+}
+
+AMateria::~AMateria()
+{
+    std::cout << "Destructor of 'AMateria' called" << std::endl;
+}
+
+std::string const & AMateria::getType() const
+{
+    return type;
+}
+
+void AMateria::use(ICharacter& target)
+{
+    (void)target;
+}
+
+AMateria.hpp
+#ifndef AMATERIA_HPP
+#define AMATERIA_HPP
+
+#include <string>
+#include <iostream>
+#include "ICharacter.hpp"
+
+class ICharacter;
+
+class AMateria
+{
+    protected:
+        std::string type;
+
+    public:
+        AMateria();
+        AMateria(std::string const & type);
+        AMateria(const AMateria &other);
+        AMateria& operator=(const AMateria &other);
+        virtual ~AMateria();
+
+        std::string const & getType() const;
+        virtual AMateria* clone() const = 0;
+        virtual void use(ICharacter& target);
+};
+
+#endif
+
+Character.cpp
+#include "Character.hpp"
+#include "AMateria.hpp"
+
+Character::Character(): name(""), floorHead(NULL), size_floor(0)
+{
+    for (int i = 0; i < 4; ++i)
+        inventory[i] = 0;
+    std::cout << "Default constructor of 'Character' called" << std::endl;
+}
+
+Character::Character(std::string const & name): name(name), floorHead(NULL), size_floor(0)
+{
+    for (int i = 0; i < 4; i++)
+        inventory[i] = 0;
+    std::cout << "Constructor with name of 'Character' called" << std::endl;
+}
+
+Character::Character(const Character &other) : name(other.name), floorHead(NULL), size_floor(0)
+{
+    for (int i = 0; i < 4; ++i)
+        inventory[i] = 0;
+    copyInventoryFrom(other);
+    copyFloorFrom(other);
+    std::cout << "Copy constructor of 'Character' called" << std::endl;
+}
+
+Character& Character::operator=(const Character& other)
+{
+    std::cout << "Copy assignment operator of 'Character' called" << std::endl;
+    if (this != &other)
+    {
+        clearInventory();
+        free_floorHead();
+        name = other.name;
+        for (int i = 0; i < 4; ++i)
+            inventory[i] = 0;
+        copyInventoryFrom(other);
+        copyFloorFrom(other);
+    }
+    return *this;
+}
+
+Character::~Character()
+{
+    std::cout << "Destructor of 'Character' called" << std::endl;
+    clearInventory();
+    free_floorHead();
+}
+
+void Character::clearInventory()
+{
+    std::cout << "clearInventory() called" << std::endl;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        delete inventory[i];
+        inventory[i] = 0;
+    }
+}
+
+void Character::copyInventoryFrom(const Character& other)
+{
+    std::cout << "copyInventoryFrom() called" << std::endl;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (other.inventory[i])
+            inventory[i] = other.inventory[i]->clone();
+        else
+            inventory[i] = 0;
+    }
+}
+
+std::string const & Character::getName() const 
+{
+    return (name);
+}
+
+void Character::equip(AMateria* m)
+{
+    std::cout << "equip() called" << std::endl;
+
+    if (!m)
+        return;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (inventory[i] == 0)
+        {
+            inventory[i] = m;
+            return;
+        }
+    }
+}
+
+void Character::unequip(int idx)
+{
+    std::cout << "unequip(" << idx << ") called" << std::endl;
+
+    if (idx < 0 || idx >= 4)
+        return;
+
+    if (!inventory[idx])
+        return;
+
+    t_FloorNode* node = new t_FloorNode;
+
+    node->materia = inventory[idx];
+    node->next = floorHead;
+
+    floorHead = node;
+    size_floor++;
+
+    inventory[idx] = 0;
+}
+
+void Character::use(int idx, ICharacter& target)
+{
+    std::cout << "use(" << idx << ") called" << std::endl;
+
+    if (idx < 0 || idx >= 4)
+        return;
+
+    if (!inventory[idx])
+        return;
+
+    inventory[idx]->use(target);
+}
+
+void Character::free_floorHead()
+{
+    std::cout << "free_floorHead() called" << std::endl;
+
+    t_FloorNode* tmp;
+
+    while (floorHead)
+    {
+        tmp = floorHead;
+        floorHead = floorHead->next;
+
+        delete tmp->materia;
+        delete tmp;
+    }
+
+    size_floor = 0;
+}
+
+void Character::copyFloorFrom(const Character& other)
+{
+    std::cout << "copyFloorFrom() called" << std::endl;
+    if (!other.floorHead)
+        return;
+    t_FloorNode* current = other.floorHead;
+    t_FloorNode* prev = NULL;
+    while (current)
+    {
+        t_FloorNode* node = new t_FloorNode;
+        node->materia = current->materia->clone();
+        node->next = NULL;
+        if (!floorHead)
+            floorHead = node;
+        else
+            prev->next = node;
+        prev = node;
+        current = current->next;
+        size_floor++;
+    }
+}
+
+Character.hpp
+#ifndef CHARACTER_HPP
+#define CHARACTER_HPP
+
+#include <iostream>
+#include "ICharacter.hpp"
+
+class AMateria;
+
+typedef struct s_FloorNode
+{
+    AMateria* materia;
+    struct s_FloorNode* next;
+} t_FloorNode;
+
+class Character : public ICharacter
+{
+    private:
+        std::string name;
+        AMateria* inventory[4];
+        t_FloorNode* floorHead;
+        int size_floor;
+
+        void clearInventory();
+        void copyInventoryFrom(const Character& other);
+        void free_floorHead();
+        void copyFloorFrom(const Character& other);
+        
+    public:
+        Character();
+        Character(std::string const & name);
+        Character(const Character &other);
+        Character& operator=(const Character &other);
+        ~Character();
+        std::string const & getName() const;
+        void equip(AMateria* m);
+        void unequip(int idx);
+        void use(int idx, ICharacter& target);
+};
+
+#endif
+copy.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+
+#define BUFFER_SIZE 1024
+
+void process_directory(const char *path, FILE *out);
+
+void copy_file(const char *filepath, const char *filename, FILE *out)
+{
+    FILE *in = fopen(filepath, "r");
+    if (!in) return;
+
+    fprintf(out, "%s\n", filename);
+
+    char buffer[BUFFER_SIZE];
+    size_t n;
+
+    while ((n = fread(buffer, 1, BUFFER_SIZE, in)) > 0)
+    {
+        fwrite(buffer, 1, n, out);
+    }
+
+    fprintf(out, "\n");
+
+    fclose(in);
+}
+
+void process_directory(const char *path, FILE *out)
+{
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+
+    if (!dir) return;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0)
+            continue;
+
+        char fullpath[1024];
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
+
+        struct stat st;
+        stat(fullpath, &st);
+
+        if (S_ISDIR(st.st_mode))
+        {
+            process_directory(fullpath, out);
+        }
+        else if (S_ISREG(st.st_mode))
+        {
+            if (strcmp(entry->d_name, "save.txt") != 0)
+                copy_file(fullpath, entry->d_name, out);
+        }
+    }
+
+    closedir(dir);
+}
+
+int main()
+{
+    FILE *out = fopen("save.txt", "w");
+    if (!out)
+    {
+        perror("Cannot create save.txt");
+        return 1;
+    }
+
+    process_directory(".", out);
+
+    fclose(out);
+    return 0;
+}
+Cure.cpp
+#include "Cure.hpp"
+
+Cure::Cure() : AMateria("cure")
+{
+    std::cout << "Default constructor of 'Cure' called" << std::endl;
+}
+
+Cure::Cure(const Cure &other) : AMateria(other)
+{
+    std::cout << "Copy constructor of 'Cure' called" << std::endl;
+}
+
+Cure& Cure::operator=(const Cure &other)
+{
+    std::cout << "Copy assignment operator of 'Cure' called" << std::endl;
+    AMateria::operator=(other);
+    return (*this);
+}
+
+Cure::~Cure()
+{
+    std::cout << "Destructor of 'Cure' called" << std::endl;
+}
+
+AMateria* Cure::clone() const
+{
+    return new Cure(*this);
+}
+
+void Cure::use(ICharacter& target)
+{
+    std::cout << "* heals " << target.getName() << "'s wounds *" << std::endl;
+}
+Cure.hpp
+#ifndef CURE_HPP
+#define CURE_HPP
+
+#include "AMateria.hpp"
+
+class Cure : public AMateria
+{
+public:
+    Cure();
+    Cure(const Cure &other);
+    Cure& operator=(const Cure &other);
+    ~Cure();
+
+    AMateria* clone() const;
+    void use(ICharacter& target);
+};
+
+#endif
+Ice.cpp
+#include "Ice.hpp"
+
+Ice::Ice() : AMateria("ice")
+{
+    std::cout << "Default constructor of 'Ice' called" << std::endl;
+}
+
+Ice::Ice(const Ice &other) : AMateria(other)
+{
+    std::cout << "Copy constructor of 'Ice' called" << std::endl;
+}
+
+Ice& Ice::operator=(const Ice &other)
+{
+    std::cout << "Copy assignment operator of 'Ice' called" << std::endl;
+    AMateria::operator=(other);
+    return (*this);
+}
+
+Ice::~Ice()
+{
+    std::cout << "Destructor of 'Ice' called" << std::endl;
+}
+
+AMateria* Ice::clone() const
+{
+    return new Ice(*this);
+}
+
+void Ice::use(ICharacter& target)
+{
+    std::cout << "* shoots an ice bolt at " << target.getName() << " *" << std::endl;
+}
+
+Ice.hpp
+#ifndef ICE_HPP
+#define ICE_HPP
+
+#include "AMateria.hpp"
+
+class Ice : public AMateria
+{
+public:
+    Ice();
+    Ice(const Ice &other);
+    Ice& operator=(const Ice &other);
+    ~Ice();
+
+    AMateria* clone() const;
+    void use(ICharacter& target);
+};
+
+#endif
+ICharacter.hpp
+#ifndef ICHARACTER_HPP
+#define ICHARACTER_HPP
+
+#include <string>
+
+class AMateria;
+
+class ICharacter
+{
+    public:
+        virtual ~ICharacter() {}
+        virtual std::string const & getName() const = 0;
+        virtual void equip(AMateria* m) = 0;
+        virtual void unequip(int idx) = 0;
+        virtual void use(int idx, ICharacter& target) = 0;
+};
+
+#endif
+IMateriaSource.hpp
+#ifndef IMATERIASOURCE_HPP
+#define IMATERIASOURCE_HPP
+
+#include <string>
+#include "AMateria.hpp"
+
+class IMateriaSource
+{
+public:
+    virtual ~IMateriaSource() {}
+    virtual void learnMateria(AMateria*) = 0;
+    virtual AMateria* createMateria(std::string const & type) = 0;
+};
+
+#endif
+main.cpp
+#include "MateriaSource.hpp"
+#include "Character.hpp"
+#include "Ice.hpp"
+#include "Cure.hpp"
+
+int main()
+{
+    IMateriaSource* src = new MateriaSource();
+    src->learnMateria(new Ice());
+    src->learnMateria(new Cure());
+
+    ICharacter* me = new Character("me");
+
+    AMateria* tmp;
+    tmp = src->createMateria("ice");
+    me->equip(tmp);
+    tmp = src->createMateria("cure");
+    me->equip(tmp);
+
+    ICharacter* bob = new Character("bob");
+
+    me->use(0, *bob);
+    me->use(1, *bob);
+    me->unequip(0);
+    me->use(0, *bob);
+
+    delete bob;
+    delete me;
+    delete src;
+    return 0;
+}
+Makefile
+NAME = Materia
+
+CC = c++
+
+CFLAGS = -Wall -Wextra -Werror -std=c++98
+
+SRC = AMateria.cpp Character.cpp Cure.cpp Ice.cpp MateriaSource.cpp main.cpp
+
+OBJ = $(SRC:.cpp=.o)
+
+all : $(NAME)
+
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+
+%.o: %.cpp AMateria.hpp Character.hpp Cure.hpp ICharacter.hpp IMateriaSource.hpp Ice.hpp MateriaSource.hpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(OBJ)
+
+fclean: clean
+	rm -rf $(NAME)
+
+re: fclean all
+
+.PHONY: clean fclean re all
+MateriaSource.cpp
+#include "MateriaSource.hpp"
+
+MateriaSource::MateriaSource()
+{
+    for (int i = 0; i < 4; ++i)
+        templates[i] = 0;
+}
+
+MateriaSource::MateriaSource(const MateriaSource& other)
+{
+    for (int i = 0; i < 4; ++i)
+        templates[i] = 0;
+    copyTemplatesFrom(other);
+}
+
+MateriaSource& MateriaSource::operator=(const MateriaSource& other)
+{
+    if (this != &other)
+    {
+        clearTemplates();
+        copyTemplatesFrom(other);
+    }
+    return *this;
+}
+
+MateriaSource::~MateriaSource()
+{
+    clearTemplates();
+}
+
+void MateriaSource::clearTemplates()
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        delete templates[i];
+        templates[i] = 0;
+    }
+}
+
+void MateriaSource::copyTemplatesFrom(const MateriaSource& other)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        if (other.templates[i])
+            templates[i] = other.templates[i]->clone();
+        else
+            templates[i] = 0;
+    }
+}
+
+void MateriaSource::learnMateria(AMateria* m)
+{
+    if (!m) return;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (templates[i] == 0)
+        {
+            templates[i] = m->clone();
+            delete m;
+            return;
+        }
+    }
+    delete m;
+}
+
+AMateria* MateriaSource::createMateria(std::string const & t)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        if (templates[i] && templates[i]->getType() == t)
+            return templates[i]->clone();
+    }
+    return 0;
+}
+MateriaSource.hpp
+#ifndef MATERIASOURCE_HPP
+#define MATERIASOURCE_HPP
+
+#include "IMateriaSource.hpp"
+
+class MateriaSource : public IMateriaSource
+{
+private:
+    AMateria* templates[4];
+
+    void clearTemplates();
+    void copyTemplatesFrom(const MateriaSource& other);
+
+public:
+    MateriaSource();
+    MateriaSource(const MateriaSource& other);
+    MateriaSource& operator=(const MateriaSource& other);
+    ~MateriaSource();
+
+    void learnMateria(AMateria* m);
+    AMateria* createMateria(std::string const & type);
+};
+
+#endif
