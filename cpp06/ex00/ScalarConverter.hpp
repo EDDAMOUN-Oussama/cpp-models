@@ -2,24 +2,22 @@
 #define SCALARCONVERTER_HPP
 
 #include <iostream>
-#include <iomanip>
 #include <string>
-#include <cstdlib>
-#include <limits>
-#include <cctype>
+#include <cstdlib> // strtod
+#include <cctype>  // isdigit, isprint
+#include <iomanip> // fixed , setprecision
+#include <limits> //numeric_limits
 #include <cmath>
 #include <cerrno>
 
-class ScalarConverter
-{
-	private:
-		ScalarConverter();
-		ScalarConverter(const ScalarConverter& other);
-		ScalarConverter& operator=(const ScalarConverter& other);
-		~ScalarConverter();
-
-	public:
-		static void convert(const std::string& literal);
+class ScalarConverter {
+    private:
+        ScalarConverter();
+        ScalarConverter(const ScalarConverter& other);
+        ScalarConverter& operator=(const ScalarConverter& other);
+        ~ScalarConverter();
+    public:
+        static void convert(const std::string& str);
 };
 
 #endif

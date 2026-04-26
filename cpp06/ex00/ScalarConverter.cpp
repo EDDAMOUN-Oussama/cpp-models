@@ -1,38 +1,29 @@
 #include "ScalarConverter.hpp"
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <cstdlib>
-#include <limits>
-#include <cctype>
-#include <cmath>
-#include <cerrno>
 
 ScalarConverter::ScalarConverter() {}
-
 ScalarConverter::ScalarConverter(const ScalarConverter &other)
 {
     (void)other;
 }
-
 ScalarConverter &ScalarConverter::operator=(const ScalarConverter &other)
 {
     (void)other;
     return *this;
 }
-
 ScalarConverter::~ScalarConverter() {}
 
-std::string trim(const std::string &str)
+std::string trim(const std::string& str)
 {
-    std::string whitespaces = " \t\n\r\f\v";
-    std::string::size_type start = str.find_first_not_of(whitespaces);
+	size_t start = 0;
+	size_t end = str.length();
 
-    if (start == std::string::npos)
-        return "";
+	while (start < str.length() && std::isspace(static_cast<unsigned char>(str[start])))
+		start++;
 
-    std::string::size_type end = str.find_last_not_of(whitespaces);
-    return str.substr(start, end - start + 1);
+	while (end > start && std::isspace(static_cast<unsigned char>(str[end - 1])))
+		end--;
+
+	return str.substr(start, end - start);
 }
 
 bool isPseudoFloat(const std::string &str)
@@ -45,22 +36,20 @@ bool isPseudoDouble(const std::string &str)
     return (str == "nan" || str == "+inf" || str == "-inf");
 }
 
-bool isCharLiteral(const std::string &str)
+bool isChar(const std::string &str)
 {
     return (str.length() == 1 && !std::isdigit(static_cast<unsigned char>(str[0])));
 }
 
-bool isIntLiteral(const std::string &str)
+bool isInt(const std::string &str)
 {
     char *end;
-    long value;
 
     if (str.empty())
         return false;
 
     errno = 0;
-    value = std::strtol(str.c_str(), &end, 10);
-    (void)value;
+    std::strtol(str.c_str(), &end, 10);
 
     if (*end != '\0')
         return false;
@@ -69,7 +58,7 @@ bool isIntLiteral(const std::string &str)
     return true;
 }
 
-bool isFloatLiteral(const std::string &str)
+bool isFloat(const std::string &str)
 {
     char *end;
     std::string core;
@@ -94,7 +83,7 @@ bool isFloatLiteral(const std::string &str)
     return true;
 }
 
-bool isDoubleLiteral(const std::string &str)
+bool isDouble(const std::string &str)
 {
     char *end;
 
@@ -352,6 +341,7 @@ void printImpossibleAll()
     std::cout << "double: impossible" << std::endl;
 }
 
+
 void ScalarConverter::convert(const std::string &literal)
 {
     std::string str = trim(literal);
@@ -362,30 +352,34 @@ void ScalarConverter::convert(const std::string &literal)
         return;
     }
 
-    if (isCharLiteral(str))
+    if (isChar(str))
     {
         char c = str[0];
         fromChar(c);
     }
     else if (isPseudoFloat(str))
     {
+        float f;
         if (str == "nanf")
-            fromFloat(std::numeric_limits<float>::quiet_NaN());
+            f = std::numeric_limits<float>::quiet_NaN();
         else if (str == "+inff")
-            fromFloat(std::numeric_limits<float>::infinity());
+            f = std::numeric_limits<float>::infinity();
         else
-            fromFloat(-std::numeric_limits<float>::infinity());
+            f = -std::numeric_limits<float>::infinity();
+        fromFloat(f);
     }
     else if (isPseudoDouble(str))
     {
+        double d;
         if (str == "nan")
-            fromDouble(std::numeric_limits<double>::quiet_NaN());
+            d = std::numeric_limits<double>::quiet_NaN();
         else if (str == "+inf")
-            fromDouble(std::numeric_limits<double>::infinity());
+            d = std::numeric_limits<double>::infinity();
         else
-            fromDouble(-std::numeric_limits<double>::infinity());
+            d = -std::numeric_limits<double>::infinity();
+        fromDouble(d);
     }
-    else if (isIntLiteral(str))
+    else if (isInt(str))
     {
         long l = std::strtol(str.c_str(), NULL, 10);
         if (l < std::numeric_limits<int>::min() || l > std::numeric_limits<int>::max())
@@ -393,9 +387,10 @@ void ScalarConverter::convert(const std::string &literal)
             printImpossibleAll();
             return;
         }
-        fromInt(static_cast<int>(l));
+        int n = static_cast<int>(l);
+        fromInt(n);
     }
-    else if (isFloatLiteral(str))
+    else if (isFloat(str))
     {
         std::string core = str.substr(0, str.length() - 1);
         double parsed = std::strtod(core.c_str(), NULL);
@@ -405,9 +400,10 @@ void ScalarConverter::convert(const std::string &literal)
             printImpossibleAll();
             return;
         }
-        fromFloat(static_cast<float>(parsed));
+        float f = static_cast<float>(parsed);
+        fromFloat(f);
     }
-    else if (isDoubleLiteral(str))
+    else if (isDouble(str))
     {
         double d = std::strtod(str.c_str(), NULL);
         fromDouble(d);
