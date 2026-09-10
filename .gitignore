@@ -1,0 +1,109 @@
+```gitignore
+# =========================
+# Compiled files
+# =========================
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# Dependency files
+*.d
+
+# Debug files
+*.dSYM/
+*.core
+core
+core.*
+
+# =========================
+# Common executable names
+# =========================
+a.out
+
+# =========================
+# Build directories
+# =========================
+build/
+bin/
+obj/
+dist/
+
+# =========================
+# CMake
+# =========================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile.cmake
+compile_commands.json
+
+# =========================
+# IDE / Editor files
+# =========================
+
+# VS Code
+.vscode/
+
+# JetBrains / CLion
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# =========================
+# Linux
+# =========================
+*~
+.directory
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+*.log
+*.bak
+*.backup
+
+# =========================
+# Valgrind
+# =========================
+valgrind.log
+vgcore.*
+
+# =========================
+# Coverage / profiling
+# =========================
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Miscellaneous
+# =========================
+Thumbs.db
+```
