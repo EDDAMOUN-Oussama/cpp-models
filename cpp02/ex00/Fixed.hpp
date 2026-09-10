@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-class Fixed{
+class Fixed {
 
     private:
         int val;

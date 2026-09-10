@@ -4,6 +4,7 @@ MateriaSource::MateriaSource()
 {
     for (int i = 0; i < 4; ++i)
         templates[i] = 0;
+    std::cout << "Default constructor of 'MateriaSource' called" << std::endl;
 }
 
 MateriaSource::MateriaSource(const MateriaSource& other)
@@ -11,10 +12,12 @@ MateriaSource::MateriaSource(const MateriaSource& other)
     for (int i = 0; i < 4; ++i)
         templates[i] = 0;
     copyTemplatesFrom(other);
+    std::cout << "Copy constructor of 'MateriaSource' called" << std::endl;
 }
 
 MateriaSource& MateriaSource::operator=(const MateriaSource& other)
 {
+    std::cout << "Copy assignment operator of 'MateriaSource' called" << std::endl;
     if (this != &other)
     {
         clearTemplates();
@@ -25,6 +28,7 @@ MateriaSource& MateriaSource::operator=(const MateriaSource& other)
 
 MateriaSource::~MateriaSource()
 {
+    std::cout << "Destructor of 'AMateria' called" << std::endl;
     clearTemplates();
 }
 
